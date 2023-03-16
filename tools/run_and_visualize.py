@@ -21,6 +21,8 @@ from core.loss import JointsMSELoss
 from core.function import validate
 from utils.utils import create_logger
 
+from custom_dataset import CustomDataset
+
 import dataset
 import models
 
@@ -113,11 +115,13 @@ def main():
 
     # Load data
     if args.input != "":
-        with open(args.input, "r") as image:
             # TODO: Write a way to handle single images
             # TODO: Handle visualization
-            pass
-    elif args.video:
+            valid_dataset = CustomDataset(args.input, transforms.Compose([
+                transforms.ToTensor(),
+                normalize,
+            ]))
+    elif args.video != "":
         # TODO: Write a way to handle videos image by image
         # TODO: Handle visualization
         pass
@@ -131,17 +135,17 @@ def main():
             ])
         )
 
-        valid_loader = torch.utils.data.DataLoader(
-            valid_dataset,
-            batch_size=cfg.TEST.BATCH_SIZE_PER_GPU*len(cfg.GPUS),
-            shuffle=False,
-            num_workers=cfg.WORKERS,
-            pin_memory=True
-        )
+    valid_loader = torch.utils.data.DataLoader(
+        valid_dataset,
+        batch_size=cfg.TEST.BATCH_SIZE_PER_GPU*len(cfg.GPUS),
+        shuffle=False,
+        num_workers=cfg.WORKERS,
+        pin_memory=True
+    )
 
-        # evaluate on validation set
-        validate(cfg, valid_loader, valid_dataset, model, criterion,
-             final_output_dir, tb_log_dir)
+    # evaluate on validation set
+    validate(cfg, valid_loader, valid_dataset, model, criterion,
+            final_output_dir, tb_log_dir)
 
 if __name__ == '__main__':
     main()
